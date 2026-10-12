@@ -1,0 +1,3 @@
+Model,CV MAE,CV RMSE,CV R2,Test MAE,Test RMSE,Test R2
+Linear Regression,0.153,0.188,0.934,0.14,0.185,0.945
+Random Forest,0.166,0.21,0.913,0.168,0.205,0.932
