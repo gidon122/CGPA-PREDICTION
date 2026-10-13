@@ -188,13 +188,12 @@ def show_recommendation(student, art):
 # --------------------------------------------------------------------------
 st.title("CGPA Prediction & Study Advice")
 
-uploaded = st.sidebar.file_uploader("Upload your CSV", type="csv")
-st.sidebar.caption(f"If nothing is uploaded, the app looks for `{DEFAULT_CSV}` next to app.py.")
+
 
 try:
-    df = load_and_clean(uploaded if uploaded else DEFAULT_CSV)
+    df = load_and_clean(DEFAULT_CSV)
 except FileNotFoundError:
-    st.info("Upload your CGPA CSV in the sidebar to begin.")
+    st.error(f"Training data `{DEFAULT_CSV}` was not found next to app.py.")
     st.stop()
 except KeyError as e:
     st.error(f"The CSV is missing an expected column: {e}")
@@ -203,9 +202,10 @@ except KeyError as e:
 art = train_models(df)
 X = df.drop(columns=[TARGET])
 
-tab_eda, tab_models, tab_imp, tab_predict = st.tabs(
-    ["Data & EDA", "Model comparison", "Feature importance", "Predict & advise"]
+tab_predict, tab_eda, tab_models, tab_imp = st.tabs(
+    ["Predict & advise", "Data & EDA", "Model comparison", "Feature importance"]
 )
+
 
 # ---- Data & EDA ----
 with tab_eda:
