@@ -292,7 +292,7 @@ with tab_imp:
 
 # ---- Predict & advise ----
 with tab_predict:
-    st.write("Enter your details below. No student records are available to select.")
+    st.write("Enter your details below.")
     with st.form("student_form"):
         values = {}
         cols = st.columns(3)
