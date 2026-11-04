@@ -40,7 +40,6 @@ The main goal of this project is to:
 
 - Interactive dashboard via Streamlit
 - Student input form for manual CGPA prediction
-- Dataset-based student selection
 - Model comparison dashboard
 - Feature importance visualization
 - Recommendation engine for study improvements
@@ -95,7 +94,7 @@ The dataset includes fields such as:
 - `Accommodation`
 - `Projected_CGPA`
 
-> Note: The dataset is synthetic and intended for educational/demo purposes.
+The training dataset is used internally to train and evaluate the models. The app does not let users browse or select student records, and the prediction form does not prefill values from the dataset.
 
 ---
 

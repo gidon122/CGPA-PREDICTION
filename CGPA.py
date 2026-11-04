@@ -269,12 +269,12 @@ with tab_models:
     st.dataframe(art["results"], width="stretch")
     st.info(f"Best model on cross-validated RMSE: **{art['best_name']}** "
             "(refit on all the data and used for predictions).")
-    st.download_button(
-        "Download results (CSV)",
-        art["results"].to_csv().encode("utf-8"),
-        file_name="model_comparison.csv",
-        mime="text/csv",
-    )
+    # st.download_button(
+    #     "Download results (CSV)",
+    #     art["results"].to_csv().encode("utf-8"),
+    #     file_name="model_comparison.csv",
+    #     mime="text/csv",
+    # )
 
 # ---- Feature importance ----
 with tab_imp:
@@ -292,49 +292,48 @@ with tab_imp:
 
 # ---- Predict & advise ----
 with tab_predict:
-    mode = st.radio("Choose input", ["Enter my details", "Pick a student from the dataset"],
-                    horizontal=True)
+    st.write("Enter your details below. No student records are available to select.")
+    with st.form("student_form"):
+        values = {}
+        cols = st.columns(3)
+        i = 0
 
-    if mode == "Pick a student from the dataset":
-        idx = st.selectbox("Student row", X.index)
-        st.dataframe(X.loc[[idx]], width="stretch")
-        if st.button("Get advice"):
-            show_recommendation(X.loc[idx], art)
-    else:
-        with st.form("student_form"):
-            values = {}
-            cols = st.columns(3)
-            i = 0
+        for c in X.columns:
+            box = cols[i % 3]
+            label = c.replace("_", " ")
 
-            for c in X.columns:
-                box = cols[i % 3]
-                label = c.replace("_", " ")
+            if c in CAT_COLS:
+                values[c] = box.text_input(label, placeholder="Enter your department")
+            elif c in ORDINALS:
+                choice = box.selectbox(
+                    label, ORDINALS[c], index=None, placeholder="Select an option")
+                values[c] = choice
+            elif c == "Accommodation":
+                values[c] = box.selectbox(
+                    label, ["On-campus", "Off-campus"], index=None,
+                    placeholder="Select an option")
+            elif c in {"Current_CGPA", "Last_SGPA"}:
+                values[c] = box.number_input(
+                    label, min_value=0.0, max_value=5.0, value=None,
+                    step=0.01, format="%.2f")
+            else:
+                values[c] = box.number_input(
+                    label, min_value=0, value=None, step=1)
+            i += 1
 
-                if c in CAT_COLS:
-                    options = sorted(df[c].dropna().unique())
-                    values[c] = box.selectbox(label, options)
-                elif c in ORDINALS:
-                    order = ORDINALS[c]
-                    med = df[c].median()
-                    default = int(round(med)) if pd.notna(med) else 0
-                    choice = box.selectbox(label, order, index=default)
-                    values[c] = order.index(choice)
-                elif c == "Accommodation":
-                    choice = box.selectbox(label, ["On-campus", "Off-campus"])
-                    values[c] = 1 if choice == "Off-campus" else 0
-                else:
-                    col_min, col_max, col_med = df[c].min(), df[c].max(), df[c].median()
-                    if (df[c].dropna() % 1 == 0).all():
-                        values[c] = box.number_input(
-                            label, min_value=int(col_min), max_value=int(col_max),
-                            value=int(col_med), step=1)
-                    else:
-                        values[c] = box.number_input(
-                            label, min_value=float(col_min), max_value=float(col_max),
-                            value=float(col_med), step=0.01, format="%.2f")
-                i += 1
+        submitted = st.form_submit_button("Predict my CGPA")
 
-            submitted = st.form_submit_button("Predict my CGPA")
-
-        if submitted:
+    if submitted:
+        missing_fields = [
+            c.replace("_", " ").title()
+            for c, value in values.items()
+            if value is None or (isinstance(value, str) and not value.strip())
+        ]
+        if missing_fields:
+            st.error(f"Please provide: {', '.join(missing_fields)}.")
+        else:
+            values["Department"] = values["Department"].strip()
+            for c, order in ORDINALS.items():
+                values[c] = order.index(values[c])
+            values["Accommodation"] = int(values["Accommodation"] == "Off-campus")
             show_recommendation(pd.Series(values)[X.columns], art)
